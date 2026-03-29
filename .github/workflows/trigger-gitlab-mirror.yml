@@ -16,7 +16,7 @@ jobs:
 
       - name: Push sync branch to GitLab
         run: |
-          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/kullanici/repo.git
+          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/karbon-boss/relaticle-crm.git
           
           # GitLab'daki mevcut sync branch'i sil (varsa)
           git push gitlab --delete upstream-sync || true
