@@ -1,21 +1,40 @@
-name: Mirror to GitLab
+name: Sync upstream changes to GitLab
 
 on:
   push:
     branches:
-      - '**'
+      - main  # veya master, hangi branch'i takip ediyorsan
 
 jobs:
-  mirror:
+  sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (full history)
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # tüm history gelsin
+          fetch-depth: 0
 
-      - name: Push to GitLab
+      - name: Push sync branch to GitLab
         run: |
-          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/karbon-boss/relaticle-crm.git
-          git push gitlab --all --force
-          git push gitlab --tags --force
+          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/kullanici/repo.git
+          
+          # GitLab'daki mevcut sync branch'i sil (varsa)
+          git push gitlab --delete upstream-sync || true
+          
+          # GitHub main'i upstream-sync olarak GitLab'a gönder
+          git push gitlab main:upstream-sync
+
+      - name: Create Merge Request on GitLab
+        run: |
+          curl --silent --fail \
+            --request POST \
+            --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN }}" \
+            --header "Content-Type: application/json" \
+            --data '{
+              "source_branch": "upstream-sync",
+              "target_branch": "main",
+              "title": "⬆️ Upstream sync: GitHub değişiklikleri",
+              "description": "GitHub upstream reposundan gelen değişiklikler. İnceleyip merge et.",
+              "remove_source_branch": true
+            }' \
+            "https://gitlab.com/api/v4/projects/${{ secrets.GITLAB_PROJECT_ID }}/merge_requests"
