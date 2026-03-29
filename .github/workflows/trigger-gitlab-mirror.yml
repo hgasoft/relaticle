@@ -1,0 +1,17 @@
+name: Trigger GitLab Mirror Pull
+
+on:
+  push:
+    branches:
+      - '**'   # tüm branch'ler için, sadece main istersen: [main]
+
+jobs:
+  trigger-mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger GitLab pull mirror
+        run: |
+          curl --silent --fail \
+            --request POST \
+            --header "PRIVATE-TOKEN: ${{ secrets.GITLAB_TOKEN }}" \
+            "https://gitlab.com/api/v4/projects/${{ secrets.GITLAB_PROJECT_ID }}/mirror/pull"
